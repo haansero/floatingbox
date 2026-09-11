@@ -51,18 +51,18 @@ button, input { -webkit-app-region: no-drag; }
 .progress { height: 3px; background: var(--card); border-radius: 2px; overflow: hidden; }
 .progress .bar { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 
-/* 사용량 */
+/* 사용량: 짧고 굵은 게이지를 한 줄에 */
 .collapsible { cursor: pointer; }
-.u-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 6px; margin: 3px 0; }
-.u-bar .k { color: var(--muted); font-size: 10px; white-space: nowrap; }
-.u-bar .v { text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: var(--muted); }
-.u-bar .bar { background: var(--ok); }
-.u-bar.warn .bar { background: var(--warn); }
-.u-bar.bad .bar { background: var(--bad); }
-.u-bar.tokens .bar { background: var(--peach-dim); }
-.u-bar.tokens .bar.sub { background: var(--peach); }
-.stack { position: relative; }
-.stack .bar.sub { position: absolute; left: 0; top: 0; }
+#usage-bars { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.gauge { display: flex; align-items: center; gap: 5px; }
+.gauge .k { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.gauge .progress { width: 56px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); position: relative; overflow: hidden; }
+.gauge .bar { height: 100%; border-radius: 4px; background: var(--ok); }
+.gauge .bar.sub { position: absolute; left: 0; top: 0; background: var(--peach); }
+.gauge.warn .bar { background: var(--warn); }
+.gauge.bad .bar { background: var(--bad); }
+.gauge.tokens .bar { background: var(--peach-dim); }
+.gauge .v { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 26px; }
 .detail { margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--line); font-size: 10px; color: var(--muted); }
 .detail .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
 .detail .row b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }

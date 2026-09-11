@@ -90,9 +90,16 @@ function keepOpen(sectionId, detailId) {
 let usageData = null;
 function bar(cls, label, pct, value, sub) {
   const subHtml = sub !== undefined ? `<div class="bar sub" style="width:${Math.min(100, sub)}%"></div>` : '';
-  return `<div class="u-bar ${cls}"><span class="k">${esc(label)}</span>
-    <div class="progress ${sub !== undefined ? 'stack' : ''}"><div class="bar" style="width:${Math.min(100, pct)}%"></div>${subHtml}</div>
+  return `<div class="gauge ${cls}" title="${esc(label)} ${esc(value)}"><span class="k">${esc(label)}</span>
+    <div class="progress"><div class="bar" style="width:${Math.min(100, pct)}%"></div>${subHtml}</div>
     <span class="v">${esc(value)}</span></div>`;
+}
+/** 앞뒤를 남기고 중간을 잘라 한 줄에 맞춤 */
+function middleTruncate(str, max) {
+  if (str.length <= max) return str;
+  const head = Math.ceil((max - 1) * 0.6);
+  const tail = max - 1 - head;
+  return str.slice(0, head) + '…' + str.slice(str.length - tail);
 }
 function renderUsage(u) {
   usageData = u;
@@ -144,9 +151,14 @@ function renderNotifs() {
   badge.textContent = String(unread);
   badge.classList.toggle('zero', unread === 0);
   const latest = notifications.find((n) => !n.read) || notifications[0];
-  $('notif-latest').innerHTML = latest
-    ? `<span class="src">${esc(latest.source)} · </span>${esc(latest.title)}${latest.body ? ' — ' + esc(latest.body) : ''}`
-    : '알림 없음';
+  if (latest) {
+    const maxChars = Math.max(24, Math.floor(($('notif-latest').clientWidth || 200) / 6.2));
+    const text = `${latest.title}${latest.body ? ' — ' + latest.body : ''}`.replace(/\s+/g, ' ');
+    $('notif-latest').innerHTML = `<span class="src">${esc(latest.source)} · </span>${esc(middleTruncate(text, maxChars))}`;
+    $('notif-latest').title = text;
+  } else {
+    $('notif-latest').textContent = '알림 없음';
+  }
 
   const list = $('notif-list');
   list.innerHTML = '';
