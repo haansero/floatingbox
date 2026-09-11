@@ -11,12 +11,12 @@ const DEFAULTS = {
   // Take over the desktop notification daemon on Linux (org.freedesktop.Notifications)
   captureDesktopNotifications: true,
   // Window position / size persisted between runs
-  window: { x: undefined, y: undefined, width: 250, height: 200 },
+  window: { x: undefined, y: undefined, width: 220, height: 200 },
   // Remembered timer state (so a restart does not lose the elapsed time)
   timer: { elapsedMs: 0, running: false, startedAt: null },
   // Keep full opacity even when the mouse is away (default: fade to ~78%)
   alwaysSharp: false,
-  layout: 2,
+  layout: 3,
 };
 
 function configPath(userDataDir) {

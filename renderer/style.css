@@ -33,10 +33,11 @@ button, input { -webkit-app-region: no-drag; }
 #box > div:last-child { border-bottom: none; }
 
 /* 시계 */
-#clock { display: flex; align-items: baseline; gap: 4px; padding: 8px 10px 6px; }
+#clock { padding: 7px 10px 5px; }
+#clock .c-row { display: flex; align-items: baseline; gap: 4px; }
 #clock-time { font-size: 30px; font-weight: 800; letter-spacing: .01em; color: var(--peach); font-variant-numeric: tabular-nums; line-height: 1; }
 #clock-sec { font-size: 13px; font-weight: 700; color: var(--peach-dim); font-variant-numeric: tabular-nums; }
-#clock-date { margin-left: auto; color: var(--muted); font-size: 10px; text-align: right; line-height: 1.2; }
+#clock-date { color: var(--muted); font-size: 10px; margin-top: 2px; }
 
 /* 타이머 */
 #timer { cursor: pointer; }
@@ -45,9 +46,12 @@ button, input { -webkit-app-region: no-drag; }
 #timer-display { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
 #timer.running #timer-display { color: var(--ok); }
 #timer.over #timer-display { color: var(--warn); }
-#timer .target { color: var(--muted); font-size: 10px; opacity: 0; transition: opacity .2s; }
-#timer:hover .target { opacity: 1; }
-#timer input { width: 34px; font: inherit; font-size: 10px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 3px; text-align: right; }
+#timer .stepper { display: flex; align-items: center; gap: 1px; color: var(--muted); }
+#timer-target { font-size: 11px; font-variant-numeric: tabular-nums; min-width: 34px; text-align: center; color: var(--fg); }
+#timer.has-target #timer-target { color: var(--accent); }
+button.step { background: none; border: none; color: var(--muted); font-size: 8px; padding: 2px 3px; cursor: pointer; line-height: 1; letter-spacing: -2px; }
+button.step:hover { color: var(--fg); }
+button.step:disabled { opacity: .25; cursor: default; }
 .progress { height: 3px; background: var(--card); border-radius: 2px; overflow: hidden; }
 .progress .bar { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 

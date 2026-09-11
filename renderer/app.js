@@ -17,7 +17,7 @@ function tickClock() {
   const d = new Date();
   $('clock-time').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   $('clock-sec').textContent = pad(d.getSeconds());
-  $('clock-date').innerHTML = `${d.getMonth() + 1}.${d.getDate()}<br>${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일`;
+  $('clock-date').textContent = `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}`;
 }
 
 // ---------- 타이머 ----------
@@ -32,6 +32,7 @@ function renderTimer() {
   el.classList.toggle('running', timer.running);
   const target = timer.targetMs;
   el.classList.toggle('over', target > 0 && ms >= target);
+  el.classList.toggle('has-target', target > 0);
   $('timer-bar').style.width = target > 0 ? Math.min(100, (ms / target) * 100) + '%' : timer.running ? '100%' : '0%';
   if (timer.checkTarget()) {
     box.pushNotification({ title: '작업 시간 목표 도달', body: `${Math.round(target / 60000)}분이 지났습니다.`, source: 'timer', urgency: 'critical' });
@@ -46,7 +47,7 @@ function renderTimer() {
   let pressTimer = null;
   let longFired = false;
   const down = (e) => {
-    if (e.target.tagName === 'INPUT' || e.button !== 0) return;
+    if (e.target.closest('.stepper') || e.button !== 0) return;
     longFired = false;
     el.classList.add('pressing');
     pressTimer = setTimeout(() => {
@@ -58,7 +59,7 @@ function renderTimer() {
     }, 600);
   };
   const up = (e) => {
-    if (e.target.tagName === 'INPUT') return;
+    if (e.target.closest('.stepper')) return;
     clearTimeout(pressTimer);
     el.classList.remove('pressing');
     if (!longFired && e.type === 'mouseup') { timer.toggle(); renderTimer(); }
@@ -67,8 +68,25 @@ function renderTimer() {
   el.addEventListener('mouseup', up);
   el.addEventListener('mouseleave', up);
 })();
-$('timer-target').addEventListener('change', (e) => { timer.setTarget(Number(e.target.value) * 60000); renderTimer(); });
-$('timer-target').addEventListener('mousedown', (e) => e.stopPropagation());
+// 목표 시간 스테퍼: 홑 10분, 겹 1시간, 0 ~ 12:00
+const TARGET_MAX_MIN = 12 * 60;
+function renderTarget() {
+  const min = Math.round(timer.targetMs / 60000);
+  $('timer-target').textContent = `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+  for (const b of document.querySelectorAll('button.step')) {
+    const step = Number(b.dataset.step);
+    b.disabled = step < 0 ? min <= 0 : min >= TARGET_MAX_MIN;
+  }
+}
+for (const b of document.querySelectorAll('button.step')) {
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const min = Math.round(timer.targetMs / 60000) + Number(b.dataset.step);
+    timer.setTarget(Math.max(0, Math.min(TARGET_MAX_MIN, min)) * 60000);
+    renderTarget();
+    renderTimer();
+  });
+}
 
 // ---------- 접기/펼치기 ----------
 const collapseTimers = new Map();
@@ -180,8 +198,8 @@ box.onState((s) => {
   renderUsage(s.usage);
   if (s.timer && !timerInitialized) {
     timer = WorkTimer.createTimer(s.timer);
-    $('timer-target').value = Math.round((s.timer.targetMs || 0) / 60000);
     timerInitialized = true;
+    renderTarget();
     renderTimer();
   }
   $('box').classList.toggle('pinned', !!s.alwaysSharp);
@@ -191,6 +209,7 @@ box.onUsage(renderUsage);
 box.onNotification(() => { /* 최신 한 줄이 갱신됨. 펼쳐져 있으면 유지 */ keepOpen('notifs', 'notif-panel'); });
 
 tickClock();
+renderTarget();
 setInterval(tickClock, 250);
 setInterval(renderTimer, 500);
 renderTimer();

@@ -187,8 +187,8 @@ app.on('second-instance', () => { if (win) win.show(); });
 app.whenReady().then(async () => {
   cfg = config.load(userData());
   if (![220, 250, 290, 340].includes(cfg.window.width)) cfg.window.width = config.DEFAULTS.window.width;
-  if (cfg.layout !== 2) { // compact layout introduced in v0.2: drop the old wide window size
-    cfg.layout = 2;
+  if (cfg.layout !== 3) { // layout change: reset to the new default width once
+    cfg.layout = 3;
     cfg.window = { ...cfg.window, width: config.DEFAULTS.window.width, height: config.DEFAULTS.window.height };
     config.save(userData(), cfg);
   }
