@@ -9,14 +9,42 @@
 | Claude 사용량 | 세션(5시간) · 주간 종합 · 주간 모델별 한도 % 와 리셋 시각, Claude Code 토큰(현재 세션 / 오늘 / 7일) |
 | 알림 허브 | 로컬 HTTP 엔드포인트로 들어오는 모든 알림 + (Linux) 데스크톱 알림 전체 가로채기. 80% / 95% 사용량 경고, 타이머 알림도 여기로 |
 
-## 실행
+## 설치와 실행
 
-```bash
+필요한 것: [Node.js](https://nodejs.org) LTS, [Git](https://git-scm.com/download/win). 모든 명령은 **프로젝트 폴더 안에서** 실행합니다 (홈 폴더에서 실행하면 `package.json` 을 찾을 수 없다는 ENOENT 오류가 납니다).
+
+Windows (cmd 또는 PowerShell):
+
+```bat
+cd %USERPROFILE%
+git clone https://github.com/haansero/floatingbox.git
+cd floatingbox
 npm install
 npm start
 ```
 
-창은 프레임 없는 투명 창이며 헤더를 잡고 드래그, 모서리로 크기 조절. `—` 는 트레이로 숨기기, 트레이 아이콘 메뉴에서 투명도 · 새로고침 · 종료.
+macOS / Linux:
+
+```bash
+git clone https://github.com/haansero/floatingbox.git
+cd floatingbox
+npm install
+npm start
+```
+
+Git 없이 받으려면 GitHub 에서 **Code > Download ZIP** 으로 내려받아 풀고, 그 폴더에서 `npm install` 과 `npm start` 를 실행합니다. 이후 업데이트는 폴더 안에서 `git pull` 후 `npm install`.
+
+## 조작법 (컴팩트 UI)
+
+| 영역 | 동작 |
+| --- | --- |
+| 시계 | 시각과 날짜 `2026.09.11 (금)`. 잡고 드래그하면 이동. 마우스가 떠나면 박스가 흐려지고 펼친 항목은 12초 뒤 자동으로 접힘 |
+| 타이머 | **클릭** 시작 / 중지, **길게 누르기(0.6초)** 리셋. 아래 `◀◀ ◀ 00:00 ▶ ▶▶` 로 목표 시간 설정(홑 10분, 겹 1시간, 최대 12:00). 도달 시 알림 |
+| 사용량 | 가운데에서 양쪽으로 자라는 게이지. 세션·주간은 소모율, 토큰은 **잔여율**(100% 에서 감소, 10% 이하 빨강). **클릭**하면 %, 리셋 시각, 토큰 수치. 토큰 하루 예산은 `config.json` 의 `codeDailyTokenBudget`(0 = 자동: 오늘을 제외한 최근 6일 최대치와 7일 평균의 2배 중 큰 값, 기록이 없으면 200M) |
+| 알림 | 개수만 표시(새 알림 n개 · 전체 n개). **클릭**하면 목록, 항목 **클릭**하면 본문 전체, × 로 삭제 |
+| 우클릭 | 숨기기 · 알림 지우기 · 새로고침 · 선명도 고정 · 너비 · 자동 실행 · 종료 |
+
+창 높이는 내용에 맞춰 자동으로 바뀝니다. 트레이 아이콘 클릭으로 보이기/숨기기.
 설정과 위치는 `userData/config.json` 에 저장됩니다 (macOS `~/Library/Application Support/floatingbox`, Linux `~/.config/floatingbox`, Windows `%APPDATA%\floatingbox`).
 
 ## Claude 사용량이 어떻게 나오나
@@ -50,7 +78,25 @@ hooks/notify.sh "제목" "본문"
 | --- | --- | --- |
 | **Linux** | **모든 데스크톱 알림을 완전히 가로채기** (팝업이 뜨지 않고 박스에만 표시) | 이 앱이 D-Bus `org.freedesktop.Notifications` 서비스를 차지해 알림 데몬(dunst, gnome-shell 등)을 대체합니다. 기본 켜짐, `captureDesktopNotifications: false` 로 끄기. GNOME 처럼 셸이 이름을 다시 가져가는 환경에서는 셸 알림 서버를 비활성화해야 합니다. |
 | **macOS** | 가로채기 **불가** (읽기만 제한적으로 가능) | 서드파티 앱이 다른 앱의 알림을 받거나 억제하는 공개 API 가 없습니다. Full Disk Access 를 주면 Notification Center DB (`~/Library/Group Containers/group.com.apple.usernoted/db2/db`) 를 읽어 *표시된 후* 목록만 미러링할 수 있습니다 (미구현, 방향만 열어 둠). 현실적인 방법은 알림을 만드는 쪽(Claude Code 훅, 스크립트, Shortcuts, 웹훅)을 박스의 HTTP 엔드포인트로 돌리는 것입니다. |
-| **Windows** | 읽기 가능, 표시 억제 불가 | WinRT `UserNotificationListener` 로 알림 센터 내용을 읽고 지울 수 있지만 토스트가 뜨는 것은 막지 못합니다. 네이티브 모듈이 필요해 이 저장소에는 아직 없습니다. |
+| **Windows 10/11** | **알림 센터 전체를 박스로 미러링**, 박스에서 지우면 알림 센터에서도 삭제. 토스트 배너 자체는 Windows 설정으로 끔 | 내장 Windows PowerShell 5.1 에서 WinRT `UserNotificationListener` 를 돌려(`electron/win/listener.ps1`) 2초마다 새 알림을 가져옵니다. 네이티브 모듈 없음. 아래 "Windows 설정" 참고. |
+
+### Windows 설정 (모든 알림을 박스에서만 보기)
+
+1. 처음 실행하면 Windows 가 알림 액세스 권한을 묻습니다. 거부했다면 **설정 > 개인 정보 및 보안 > 알림** 에서 허용하세요. 박스 하단에 `시스템 알림 수집 ON (listening)` 이 보이면 정상입니다.
+2. 토스트 팝업을 없애려면 **설정 > 시스템 > 알림** 에서 앱별로 "알림 배너 표시" 를 끄고 "알림 센터에 알림 표시" 만 남깁니다. 그러면 알림이 화면에 뜨지 않고 알림 센터로 바로 가며, 박스가 2초 안에 가져옵니다. (Windows 는 서드파티 앱이 다른 앱의 토스트를 직접 차단하는 것을 허용하지 않습니다.)
+3. 트레이 메뉴 **로그인 시 자동 실행** 을 켜두면 부팅 후 바로 떠 있습니다. 앱은 단일 인스턴스로 동작합니다.
+4. 이미 알림 센터에 있던 항목은 시작 시 읽음 상태로 들어옵니다. 박스의 × 는 알림 센터에서도 지웁니다.
+
+## Windows 설치 파일 만들기
+
+프로젝트 폴더 안에서:
+
+```bat
+cd %USERPROFILE%\floatingbox
+npm run dist:win
+```
+
+`dist\` 에 NSIS 설치 파일(`Floating Box Setup 0.1.0.exe`)과 포터블 exe(x64)가 생깁니다. 설치 후에는 Node.js 없이 실행됩니다.
 
 ## 테스트
 

@@ -117,6 +117,7 @@ async function startDesktopNotificationServer(hub, { log = () => {} } = {}) {
 
   return {
     ok: true,
+    reason: 'dbus org.freedesktop.Notifications',
     stop: () => {
       try { bus.disconnect(); } catch { /* ignore */ }
     },

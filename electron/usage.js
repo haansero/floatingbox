@@ -45,8 +45,10 @@ function parsePlanUsage(json) {
       resetsAt: val.resets_at || val.resetsAt || null,
     });
   }
-  out.sort((a, b) => orderOf(a.key) - orderOf(b.key));
-  return out;
+  // Unknown buckets (feature-specific pools) only matter once they are used.
+  const filtered = out.filter((b) => BUCKET_LABELS[b.key] || b.percent > 0);
+  filtered.sort((a, b) => orderOf(a.key) - orderOf(b.key));
+  return filtered;
 }
 
 function orderOf(key) {
@@ -141,6 +143,7 @@ async function collectCodeUsage({
     week: emptyTotals(),
     last5h: emptyTotals(),
     byModel: {},
+    byDay: {},
     latestSession: null,
     filesScanned: files.length,
   };
@@ -158,6 +161,11 @@ async function collectCodeUsage({
         addUsage(result.byModel[rec.model], rec.usage);
       }
       if (rec.ts >= startOfToday.getTime()) addUsage(result.today, rec.usage);
+      if (rec.ts >= weekAgo) {
+        const day = localDay(rec.ts);
+        result.byDay[day] ??= emptyTotals();
+        addUsage(result.byDay[day], rec.usage);
+      }
       if (rec.ts >= fiveHoursAgo) addUsage(result.last5h, rec.usage);
       if (!latest || rec.ts > latest.ts) latest = { ts: rec.ts, sessionId: rec.sessionId, file: f.path };
     }
@@ -179,6 +187,23 @@ async function collectCodeUsage({
     result.latestSession = { sessionId: latest.sessionId, startedAt: first, lastAt: latest.ts, totals: s };
   }
   return result;
+}
+
+function localDay(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const DEFAULT_DAILY_BUDGET = 200e6;
+
+/** Daily token budget: fixed from config, else the busiest previous day of the last week, else a default. */
+function dailyBudget(code, fixed, now = Date.now()) {
+  if (fixed > 0) return fixed;
+  const today = localDay(now);
+  let max = 0;
+  for (const [day, t] of Object.entries(code.byDay || {})) if (day !== today) max = Math.max(max, totalTokens(t));
+  if (code.week) max = Math.max(max, (totalTokens(code.week) / 7) * 2);
+  return max || DEFAULT_DAILY_BUDGET;
 }
 
 function listJsonl(dir) {
@@ -217,4 +242,6 @@ module.exports = {
   collectCodeUsage,
   totalTokens,
   emptyTotals,
+  dailyBudget,
+  localDay,
 };

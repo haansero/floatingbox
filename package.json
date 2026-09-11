@@ -7,13 +7,57 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.js",
-    "notify": "node scripts/notify.js"
+    "notify": "node scripts/notify.js",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
   },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "dbus-next": "^0.10.2"
+  },
+  "build": {
+    "appId": "dev.haansero.floatingbox",
+    "productName": "Floating Box",
+    "files": [
+      "electron/**",
+      "renderer/**",
+      "scripts/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    }
   }
 }

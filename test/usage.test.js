@@ -11,6 +11,7 @@ test('parsePlanUsage maps known buckets, orders them, tolerates junk', () => {
     seven_day: { utilization: 42.5, resets_at: '2026-09-15T00:00:00Z' },
     five_hour: { utilization: 12, resets_at: '2026-09-11T12:00:00Z' },
     something_new: { utilization: 3 },
+    idle_pool: { utilization: 0 },
     extra_usage: { is_enabled: false },
     seven_day_opus: { utilization: 150 },
     nope: 'string',
@@ -70,6 +71,11 @@ test('collectCodeUsage aggregates today / week / session and dedupes', async () 
   assert.equal(r.last5h.input, 100);
   assert.equal(r.byModel['claude-opus-5'].input, 200);
   assert.equal(r.latestSession.sessionId, 's1');
+  assert.equal(Object.keys(r.byDay).length, 2);
+  // yesterday's record (216) vs twice the 7-day daily average (332*2/7 ≈ 94.9): the larger wins
+  assert.equal(usage.dailyBudget(r, 0, now), 216);
+  assert.equal(usage.dailyBudget({ byDay: {} }, 0, now), 200e6);
+  assert.equal(usage.dailyBudget(r, 5000), 5000);
   assert.equal(r.latestSession.totals.input, 300);
   assert.equal(usage.totalTokens(r.week), 300 + 20 + 10 + 2);
   // "today" depends on local midnight; the 1h-ago record must count when it is after local midnight
