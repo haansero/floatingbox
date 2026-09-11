@@ -26,12 +26,14 @@ function createWindow() {
 
   win = new BrowserWindow({
     x, y, width, height,
+    useContentSize: true,
     minWidth: 200,
     minHeight: 60,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     resizable: true, // resizable:false pins min/max size and blocks programmatic height changes
+    thickFrame: false, // Windows: no invisible resize border (it also inflated the width on every setSize)
     focusable: true,
     skipTaskbar: true,
     hasShadow: false,
@@ -50,7 +52,9 @@ function createWindow() {
 
   const persistBounds = () => {
     if (!win) return;
-    cfg.window = { ...cfg.window, ...win.getBounds() };
+    // Only the position is taken from the window; width is ours, height follows content.
+    const { x: bx, y: by } = win.getBounds();
+    cfg.window = { ...cfg.window, x: bx, y: by };
     config.save(userData(), cfg);
   };
   win.on('moved', persistBounds);
@@ -128,7 +132,7 @@ function buildMenu() {
       label: '너비',
       submenu: [220, 250, 290, 340].map((w) => ({
         label: `${w}px`, type: 'radio', checked: cfg.window.width === w,
-        click: () => { cfg.window.width = w; const [, h] = win.getSize(); win.setSize(w, h); config.save(userData(), cfg); },
+        click: () => { cfg.window.width = w; win.setContentSize(w, win.getContentSize()[1], false); config.save(userData(), cfg); },
       })),
     },
     {
@@ -163,11 +167,14 @@ function wireIpc() {
   ipcMain.on('usage:refresh', () => refreshUsage());
   ipcMain.on('window:hide', () => win && win.hide());
   ipcMain.on('window:quit', () => app.quit());
+  let lastHeight = 0;
   ipcMain.on('window:resize', (_e, h) => {
     if (!win || !Number.isFinite(h)) return;
     const height = Math.max(60, Math.min(Math.round(h) + 2, screen.getPrimaryDisplay().workArea.height - 40));
-    const [w, cur] = win.getSize();
-    if (cur !== height) win.setSize(w, height, false);
+    if (height === lastHeight) return;
+    lastHeight = height;
+    // Always pass our own width: never read the size back from the window, so it cannot drift.
+    win.setContentSize(cfg.window.width, height, false);
   });
   ipcMain.on('window:menu', () => buildMenu().popup({ window: win }));
   ipcMain.on('open:url', (_e, url) => { if (/^https?:\/\//.test(url)) shell.openExternal(url); });
@@ -179,6 +186,7 @@ app.on('second-instance', () => { if (win) win.show(); });
 
 app.whenReady().then(async () => {
   cfg = config.load(userData());
+  if (![220, 250, 290, 340].includes(cfg.window.width)) cfg.window.width = config.DEFAULTS.window.width;
   if (cfg.layout !== 2) { // compact layout introduced in v0.2: drop the old wide window size
     cfg.layout = 2;
     cfg.window = { ...cfg.window, width: config.DEFAULTS.window.width, height: config.DEFAULTS.window.height };
