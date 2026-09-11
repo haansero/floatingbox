@@ -26,12 +26,13 @@ function createWindow() {
 
   win = new BrowserWindow({
     x, y, width, height,
-    minWidth: 240,
-    minHeight: 200,
+    minWidth: 200,
+    minHeight: 60,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    resizable: true,
+    resizable: true, // resizable:false pins min/max size and blocks programmatic height changes
+    focusable: true,
     skipTaskbar: true,
     hasShadow: false,
     fullscreenable: false,
@@ -45,7 +46,6 @@ function createWindow() {
   });
   win.setAlwaysOnTop(true, 'floating');
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  win.setOpacity(cfg.opacity);
   win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
   const persistBounds = () => {
@@ -54,7 +54,6 @@ function createWindow() {
     config.save(userData(), cfg);
   };
   win.on('moved', persistBounds);
-  win.on('resized', persistBounds);
   win.on('closed', () => { win = null; });
   win.webContents.on('did-finish-load', () => sendState());
 }
@@ -73,6 +72,7 @@ function sendState() {
     desktopCapture: capture ? capture.ok : false,
     desktopCaptureReason: capture ? capture.reason : 'disabled',
     platform: process.platform,
+    alwaysSharp: !!cfg.alwaysSharp,
   });
   if (tray) tray.setToolTip(`Floating Box — 알림 ${hub.unreadCount()}개`);
 }
@@ -114,23 +114,23 @@ function checkUsageThresholds() {
   }
 }
 
-function buildTray() {
-  const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVQ4T2NkYGD4z0AEYCJGEUjNqEJiQ2rUDf+jQUcNGjXoP0ONhoaG/8jJyQkYGBg4FBYW/j+MDQwAAJ8PC1cz2D2qAAAAAElFTkSuQmCC'
-  );
-  tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
-  const menu = Menu.buildFromTemplate([
-    { label: '보이기 / 숨기기', click: () => (win.isVisible() ? win.hide() : win.show()) },
+function buildMenu() {
+  return Menu.buildFromTemplate([
+    { label: '숨기기 (트레이에서 다시 열기)', click: () => win.hide() },
     { label: '알림 모두 지우기', click: () => { hub.clear(); sendState(); } },
+    { label: '사용량 새로고침', click: () => refreshUsage() },
     { type: 'separator' },
     {
-      label: '투명도',
-      submenu: [1, 0.94, 0.85, 0.7, 0.5].map((v) => ({
-        label: `${Math.round(v * 100)}%`, type: 'radio', checked: cfg.opacity === v,
-        click: () => { cfg.opacity = v; win.setOpacity(v); config.save(userData(), cfg); },
+      label: '마우스 없을 때도 선명하게', type: 'checkbox', checked: !!cfg.alwaysSharp,
+      click: (item) => { cfg.alwaysSharp = item.checked; config.save(userData(), cfg); sendState(); },
+    },
+    {
+      label: '너비',
+      submenu: [220, 250, 290, 340].map((w) => ({
+        label: `${w}px`, type: 'radio', checked: cfg.window.width === w,
+        click: () => { cfg.window.width = w; const [, h] = win.getSize(); win.setSize(w, h); config.save(userData(), cfg); },
       })),
     },
-    { label: '사용량 새로고침', click: () => refreshUsage() },
     {
       label: '로그인 시 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin,
       click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked, args: ['--hidden'] }),
@@ -138,6 +138,14 @@ function buildTray() {
     { type: 'separator' },
     { label: '종료', click: () => app.quit() },
   ]);
+}
+
+function buildTray() {
+  const icon = nativeImage.createFromDataURL(
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVQ4T2NkYGD4z0AEYCJGEUjNqEJiQ2rUDf+jQUcNGjXoP0ONhoaG/8jJyQkYGBg4FBYW/j+MDQwAAJ8PC1cz2D2qAAAAAElFTkSuQmCC'
+  );
+  tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
+  const menu = buildMenu();
   tray.setContextMenu(menu);
   tray.on('click', () => (win.isVisible() ? win.hide() : win.show()));
 }
@@ -155,6 +163,13 @@ function wireIpc() {
   ipcMain.on('usage:refresh', () => refreshUsage());
   ipcMain.on('window:hide', () => win && win.hide());
   ipcMain.on('window:quit', () => app.quit());
+  ipcMain.on('window:resize', (_e, h) => {
+    if (!win || !Number.isFinite(h)) return;
+    const height = Math.max(60, Math.min(Math.round(h) + 2, screen.getPrimaryDisplay().workArea.height - 40));
+    const [w, cur] = win.getSize();
+    if (cur !== height) win.setSize(w, height, false);
+  });
+  ipcMain.on('window:menu', () => buildMenu().popup({ window: win }));
   ipcMain.on('open:url', (_e, url) => { if (/^https?:\/\//.test(url)) shell.openExternal(url); });
   ipcMain.handle('state:get', () => ({ notifications: hub.items, usage: usageState, timer: cfg.timer, hubPort: hub.port }));
 }
@@ -164,6 +179,11 @@ app.on('second-instance', () => { if (win) win.show(); });
 
 app.whenReady().then(async () => {
   cfg = config.load(userData());
+  if (cfg.layout !== 2) { // compact layout introduced in v0.2: drop the old wide window size
+    cfg.layout = 2;
+    cfg.window = { ...cfg.window, width: config.DEFAULTS.window.width, height: config.DEFAULTS.window.height };
+    config.save(userData(), cfg);
+  }
   hub = new NotifyHub({ port: cfg.hubPort });
   hub.on('notification', (n) => { send('notification', n); sendState(); if (win && !win.isVisible()) win.showInactive(); });
   hub.on('change', () => sendState());

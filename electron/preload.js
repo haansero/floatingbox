@@ -16,4 +16,6 @@ contextBridge.exposeInMainWorld('box', {
   hide: () => ipcRenderer.send('window:hide'),
   quit: () => ipcRenderer.send('window:quit'),
   openUrl: (u) => ipcRenderer.send('open:url', u),
+  resizeTo: (h) => ipcRenderer.send('window:resize', h),
+  contextMenu: () => ipcRenderer.send('window:menu'),
 });

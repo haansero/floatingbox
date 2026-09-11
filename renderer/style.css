@@ -1,97 +1,96 @@
 :root {
-  --bg: rgba(22, 24, 30, 0.97);
-  --fg: #e8e9ee;
-  --muted: #9aa0ad;
-  --accent: #7aa2ff;
-  --ok: #4fd18b;
-  --warn: #ffb547;
-  --bad: #ff5f6d;
-  --card: rgba(255, 255, 255, 0.05);
-  --line: rgba(255, 255, 255, 0.08);
+  --bg: rgba(20, 21, 26, 0.94);
+  --fg: #e6e4e0;
+  --muted: #8d8b88;
+  --peach: #f7c9a8;        /* 시계: 색온도 낮은 살구 파스텔 */
+  --peach-dim: #d9a88a;
+  --accent: #e8b48f;
+  --ok: #9fd3a8;
+  --warn: #f2c98a;
+  --bad: #f09a9a;
+  --card: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.09);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Roboto, sans-serif;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--fg);
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+html, body { margin: 0; background: transparent; overflow: hidden; }
 #box {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  width: 100vw;
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
-  backdrop-filter: blur(14px);
-}
-header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--line);
+  opacity: .78;
+  transition: opacity .25s;
   user-select: none;
 }
+#box:hover, #box.pinned { opacity: 1; }
 .drag { -webkit-app-region: drag; }
-.no-drag { -webkit-app-region: no-drag; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-.title { font-weight: 600; letter-spacing: .02em; }
-.spacer { flex: 1; }
-button { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
-button:hover { background: rgba(255,255,255,.1); }
-button.icon { padding: 0 6px; line-height: 18px; background: transparent; border: none; color: var(--muted); }
-button.icon:hover { color: var(--fg); }
-button.ghost { background: transparent; }
-button.link { background: none; border: none; color: var(--muted); padding: 0 4px; }
-button.link:hover { color: var(--fg); }
-section { padding: 8px 12px; border-bottom: 1px solid var(--line); }
-section:last-of-type { border-bottom: none; flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
-.muted { color: var(--muted); font-size: 11px; }
+button, input { -webkit-app-region: no-drag; }
+#box > div { padding: 5px 10px; border-bottom: 1px solid var(--line); }
+#box > div:last-child { border-bottom: none; }
 
-#clock { text-align: center; padding: 10px 12px 6px; }
-#clock .time { font-size: 34px; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-#clock .date { color: var(--muted); font-size: 12px; }
+/* 시계 */
+#clock { display: flex; align-items: baseline; gap: 4px; padding: 8px 10px 6px; }
+#clock-time { font-size: 30px; font-weight: 800; letter-spacing: .01em; color: var(--peach); font-variant-numeric: tabular-nums; line-height: 1; }
+#clock-sec { font-size: 13px; font-weight: 700; color: var(--peach-dim); font-variant-numeric: tabular-nums; }
+#clock-date { margin-left: auto; color: var(--muted); font-size: 10px; text-align: right; line-height: 1.2; }
 
-#timer .timer-display { font-size: 26px; font-variant-numeric: tabular-nums; text-align: center; margin: 2px 0 4px; }
-#timer.running .timer-display { color: var(--ok); }
-#timer.over .timer-display { color: var(--warn); }
-#timer .controls { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
-#timer .target { color: var(--muted); font-size: 11px; }
-#timer input { width: 46px; font: inherit; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 2px 4px; text-align: right; }
-.progress { height: 4px; background: var(--card); border-radius: 2px; overflow: hidden; }
+/* 타이머 */
+#timer { cursor: pointer; }
+#timer.pressing { background: rgba(255,255,255,.04); }
+#timer .t-row { display: flex; align-items: center; justify-content: space-between; margin-top: 3px; }
+#timer-display { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+#timer.running #timer-display { color: var(--ok); }
+#timer.over #timer-display { color: var(--warn); }
+#timer .target { color: var(--muted); font-size: 10px; opacity: 0; transition: opacity .2s; }
+#timer:hover .target { opacity: 1; }
+#timer input { width: 34px; font: inherit; font-size: 10px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 3px; text-align: right; }
+.progress { height: 3px; background: var(--card); border-radius: 2px; overflow: hidden; }
 .progress .bar { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
 
-.usage-item { margin: 4px 0; }
-.usage-item .row { margin: 0; font-size: 12px; }
-.usage-item .pct { font-variant-numeric: tabular-nums; }
-.usage-item .bar { background: var(--ok); }
-.usage-item.warn .bar { background: var(--warn); }
-.usage-item.bad .bar { background: var(--bad); }
-.usage-code { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 6px; }
-.usage-code .cell { background: var(--card); border-radius: 8px; padding: 4px 6px; }
-.usage-code .cell .k { color: var(--muted); font-size: 10px; }
-.usage-code .cell .v { font-size: 13px; font-variant-numeric: tabular-nums; }
-.error { color: var(--bad); font-size: 11px; }
+/* 사용량 */
+.collapsible { cursor: pointer; }
+.u-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 6px; margin: 3px 0; }
+.u-bar .k { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.u-bar .v { text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: var(--muted); }
+.u-bar .bar { background: var(--ok); }
+.u-bar.warn .bar { background: var(--warn); }
+.u-bar.bad .bar { background: var(--bad); }
+.u-bar.tokens .bar { background: var(--peach-dim); }
+.u-bar.tokens .bar.sub { background: var(--peach); }
+.stack { position: relative; }
+.stack .bar.sub { position: absolute; left: 0; top: 0; }
+.detail { margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--line); font-size: 10px; color: var(--muted); }
+.detail .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
+.detail .row b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+.error { color: var(--bad); font-size: 10px; }
 
-.badge { display: inline-block; min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 10px; text-align: center; margin-left: 4px; }
+/* 알림 */
+#notif-line { display: flex; align-items: center; gap: 6px; }
+.badge { min-width: 15px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #1a1512; font-size: 9px; font-weight: 700; text-align: center; line-height: 14px; }
 .badge.zero { background: var(--card); color: var(--muted); }
-#notif-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
-#notif-list li { padding: 6px 8px; margin: 4px 0; background: var(--card); border-left: 3px solid var(--accent); border-radius: 6px; cursor: default; }
+.one-line { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; }
+.one-line .src { color: var(--muted); }
+#notif-panel .tools { display: flex; justify-content: flex-end; gap: 2px; margin-bottom: 2px; }
+button.link { background: none; border: none; color: var(--muted); font: inherit; font-size: 10px; padding: 0 4px; cursor: pointer; }
+button.link:hover { color: var(--fg); }
+#notif-list { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; }
+#notif-list li { padding: 3px 6px; margin: 2px 0; border-left: 2px solid var(--accent); border-radius: 4px; background: var(--card); cursor: pointer; }
 #notif-list li.read { opacity: .55; }
 #notif-list li.critical { border-left-color: var(--bad); }
 #notif-list li.low { border-left-color: var(--muted); }
-#notif-list .head { display: flex; justify-content: space-between; gap: 6px; }
-#notif-list .src { color: var(--muted); font-size: 10px; }
-#notif-list .t { font-weight: 600; font-size: 12px; }
-#notif-list .b { font-size: 12px; white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
-#notif-list .x { color: var(--muted); cursor: pointer; }
+#notif-list .head { display: flex; align-items: center; gap: 4px; }
+#notif-list .head .t { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; }
+#notif-list li.open .head { flex-wrap: wrap; }
+#notif-list li.open .head .t { white-space: normal; font-weight: 600; flex-basis: calc(100% - 14px); }
+#notif-list li.open .head .src { order: 3; }
+#notif-list .src { color: var(--muted); font-size: 9px; white-space: nowrap; }
+#notif-list .x { color: var(--muted); padding: 0 2px; }
 #notif-list .x:hover { color: var(--fg); }
-#notif-list .when { color: var(--muted); font-size: 10px; }
-
-#toast {
-  position: fixed; left: 12px; right: 12px; bottom: 12px;
-  background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 10px;
-  font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
-}
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+#notif-list .b { display: none; font-size: 11px; color: var(--fg); white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
+#notif-list li.open .b { display: block; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
