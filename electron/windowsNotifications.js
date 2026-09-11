@@ -19,6 +19,11 @@ const POWERSHELL = 'powershell.exe';
 const PS_ARGS = ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File'];
 const ID_PREFIX = 'win:';
 
+/** Scripts live outside app.asar (asarUnpack) because powershell.exe cannot read from the archive. */
+function scriptPath(name) {
+  return path.join(__dirname.replace(/app\.asar([\\/])/, 'app.asar.unpacked$1'), 'win', name);
+}
+
 /** Parse one JSON line from listener.ps1. Returns null for noise. */
 function parseListenerLine(line) {
   const s = String(line || '').trim();
@@ -50,7 +55,7 @@ function toHubPayload(ev) {
 function startWindowsNotificationListener(hub, { log = () => {}, platform = process.platform, pollSeconds = 2 } = {}) {
   if (platform !== 'win32') return { ok: false, reason: 'not-windows' };
 
-  const script = path.join(__dirname, 'win', 'listener.ps1');
+  const script = scriptPath('listener.ps1');
   let child = null;
   let stopped = false;
   let backoff = 2000;
@@ -84,7 +89,9 @@ function startWindowsNotificationListener(hub, { log = () => {}, platform = proc
       }
     });
     child.stderr.on('data', (d) => log('windows listener stderr: ' + String(d).trim()));
+    child.on('error', (err) => log('windows listener spawn error: ' + err.message));
     child.on('exit', (code) => {
+      log(`windows listener exited (code ${code})`);
       child = null;
       if (stopped) return;
       // Permanent failures (2,3,4) are not retried; crashes are, with backoff.
@@ -101,7 +108,7 @@ function startWindowsNotificationListener(hub, { log = () => {}, platform = proc
     if (!String(hubId).startsWith(ID_PREFIX)) return;
     const winId = hubId.slice(ID_PREFIX.length);
     if (!/^\d+$/.test(winId)) return;
-    execFile(POWERSHELL, [...PS_ARGS, path.join(__dirname, 'win', 'remove.ps1'), '-Id', winId], { windowsHide: true }, (err) => {
+    execFile(POWERSHELL, [...PS_ARGS, scriptPath('remove.ps1'), '-Id', winId], { windowsHide: true }, (err) => {
       if (err) log('remove failed: ' + err.message);
     });
   };
@@ -120,4 +127,4 @@ function startWindowsNotificationListener(hub, { log = () => {}, platform = proc
   };
 }
 
-module.exports = { startWindowsNotificationListener, parseListenerLine, toHubPayload, ID_PREFIX };
+module.exports = { startWindowsNotificationListener, parseListenerLine, toHubPayload, scriptPath, ID_PREFIX };

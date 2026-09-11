@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseListenerLine, toHubPayload, startWindowsNotificationListener, ID_PREFIX } = require('../electron/windowsNotifications');
+const { parseListenerLine, toHubPayload, startWindowsNotificationListener, scriptPath, ID_PREFIX } = require('../electron/windowsNotifications');
 const { NotifyHub } = require('../electron/notifyHub');
 
 test('parseListenerLine only accepts typed JSON objects', () => {
@@ -26,4 +26,10 @@ test('toHubPayload maps a listener event, falls back to app name', () => {
 test('listener refuses to start off Windows', () => {
   const r = startWindowsNotificationListener(new NotifyHub(), { platform: 'linux' });
   assert.deepEqual(r, { ok: false, reason: 'not-windows' });
+});
+
+test('scriptPath points at the unpacked copy when running from app.asar', () => {
+  const p = scriptPath('listener.ps1');
+  assert.ok(p.endsWith(require('node:path').join('win', 'listener.ps1')));
+  assert.ok(!p.includes('app.asar/') || p.includes('app.asar.unpacked'));
 });

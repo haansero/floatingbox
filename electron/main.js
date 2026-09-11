@@ -1,6 +1,7 @@
 'use strict';
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell } = require('electron');
 const path = require('node:path');
+const fs = require('node:fs');
 const config = require('./config');
 const { NotifyHub } = require('./notifyHub');
 const { startDesktopNotificationServer } = require('./dbusNotifications');
@@ -17,6 +18,24 @@ let usageTimer = null;
 const usageState = { plan: [], planError: null, code: null, codeError: null, updatedAt: null, source: null };
 
 const userData = () => app.getPath('userData');
+
+// File log so a packaged build (no console) can still be diagnosed: <userData>/floatingbox.log
+let logStream = null;
+function log(...args) {
+  const line = `${new Date().toISOString()} ${args.map((a) => (a instanceof Error ? a.stack : String(a))).join(' ')}`;
+  console.log(line);
+  try {
+    if (!logStream) {
+      fs.mkdirSync(userData(), { recursive: true });
+      const file = path.join(userData(), 'floatingbox.log');
+      try { if (fs.statSync(file).size > 1_000_000) fs.truncateSync(file, 0); } catch { /* new file */ }
+      logStream = fs.createWriteStream(file, { flags: 'a' });
+    }
+    logStream.write(line + '\n');
+  } catch { /* ignore */ }
+}
+process.on('uncaughtException', (e) => log('uncaughtException', e));
+process.on('unhandledRejection', (e) => log('unhandledRejection', e));
 
 function createWindow() {
   const { width, height } = cfg.window;
@@ -182,10 +201,16 @@ function wireIpc() {
   ipcMain.handle('state:get', () => ({ notifications: hub.items, usage: usageState, timer: cfg.timer, hubPort: hub.port }));
 }
 
-if (!app.requestSingleInstanceLock()) app.quit();
-app.on('second-instance', () => { if (win) win.show(); });
+if (!app.requestSingleInstanceLock()) {
+  log('another instance is already running; exiting');
+  app.quit();
+}
+app.on('second-instance', () => { log('second instance started; showing window'); if (win) { win.show(); win.focus(); } });
 
-app.whenReady().then(async () => {
+app.whenReady().then(main).catch((e) => log('startup failed', e));
+
+async function main() {
+  log(`starting v${app.getVersion()} packaged=${app.isPackaged} platform=${process.platform} exe=${process.execPath}`);
   cfg = config.load(userData());
   if (![220, 250, 290, 340].includes(cfg.window.width)) cfg.window.width = config.DEFAULTS.window.width;
   if (cfg.layout !== 3) { // layout change: reset to the new default width once
@@ -199,27 +224,32 @@ app.whenReady().then(async () => {
 
   try {
     await hub.listen();
+    log(`notification hub on 127.0.0.1:${hub.port}`);
   } catch (e) {
-    console.error('notification hub failed to start:', e.message);
+    log('notification hub failed to start:', e.message);
   }
 
   if (cfg.captureDesktopNotifications) {
-    const log = (m) => console.log(m);
     if (process.platform === 'linux') capture = await startDesktopNotificationServer(hub, { log });
     else if (process.platform === 'win32') capture = startWindowsNotificationListener(hub, { log });
     else capture = { ok: false, reason: 'unsupported on ' + process.platform };
-    if (!capture.ok) console.log('desktop notification capture off:', capture.reason);
+    if (!capture.ok) log('desktop notification capture off:', capture.reason);
   }
 
   wireIpc();
   createWindow();
-  buildTray();
+  log(`window created at ${JSON.stringify(win.getBounds())}`);
+  try {
+    buildTray();
+  } catch (e) {
+    log('tray failed (continuing without it):', e);
+  }
 
   refreshUsage();
   usageTimer = setInterval(refreshUsage, cfg.usagePollMs);
 
   app.on('activate', () => { if (!win) createWindow(); });
-});
+}
 
 app.on('window-all-closed', () => { /* keep tray alive */ });
 app.on('before-quit', async () => {
