@@ -1,0 +1,19 @@
+{
+  "_comment": "Merge into ~/.claude/settings.json. Replace /path/to/floatingbox with the real path. Every Claude Code notification (permission prompts, idle waiting) and every finished response lands in the floating box.",
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node /path/to/floatingbox/scripts/notify.js --stdin" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node /path/to/floatingbox/scripts/notify.js --stdin --urgency=low" }
+        ]
+      }
+    ]
+  }
+}

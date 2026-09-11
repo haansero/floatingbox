@@ -1,0 +1,19 @@
+{
+  "name": "floatingbox",
+  "version": "0.1.0",
+  "description": "Always-on-top floating box: clock, work timer, Claude usage, notification hub",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "notify": "node scripts/notify.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "dependencies": {
+    "dbus-next": "^0.10.2"
+  }
+}
