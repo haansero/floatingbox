@@ -59,7 +59,10 @@
         "AppImage"
       ],
       "category": "Utility"
-    }
+    },
+    "asarUnpack": [
+      "electron/win/**"
+    ]
   },
   "author": "haansero"
 }
