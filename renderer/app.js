@@ -94,13 +94,6 @@ function bar(cls, label, pct, value, sub) {
     <div class="progress"><div class="bar" style="width:${Math.min(100, pct)}%"></div>${subHtml}</div>
     <span class="v">${esc(value)}</span></div>`;
 }
-/** 앞뒤를 남기고 중간을 잘라 한 줄에 맞춤 */
-function middleTruncate(str, max) {
-  if (str.length <= max) return str;
-  const head = Math.ceil((max - 1) * 0.6);
-  const tail = max - 1 - head;
-  return str.slice(0, head) + '…' + str.slice(str.length - tail);
-}
 function renderUsage(u) {
   usageData = u;
   const bars = $('usage-bars');
@@ -150,15 +143,9 @@ function renderNotifs() {
   const badge = $('notif-badge');
   badge.textContent = String(unread);
   badge.classList.toggle('zero', unread === 0);
-  const latest = notifications.find((n) => !n.read) || notifications[0];
-  if (latest) {
-    const maxChars = Math.max(24, Math.floor(($('notif-latest').clientWidth || 200) / 6.2));
-    const text = `${latest.title}${latest.body ? ' — ' + latest.body : ''}`.replace(/\s+/g, ' ');
-    $('notif-latest').innerHTML = `<span class="src">${esc(latest.source)} · </span>${esc(middleTruncate(text, maxChars))}`;
-    $('notif-latest').title = text;
-  } else {
-    $('notif-latest').textContent = '알림 없음';
-  }
+  const total = notifications.length;
+  $('notif-latest').textContent = total === 0 ? '알림 없음' : unread > 0 ? `새 알림 ${unread}개 · 전체 ${total}개` : `알림 ${total}개`;
+  $('notif-latest').title = '';
 
   const list = $('notif-list');
   list.innerHTML = '';
