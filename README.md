@@ -9,12 +9,30 @@
 | Claude 사용량 | 세션(5시간) · 주간 종합 · 주간 모델별 한도 % 와 리셋 시각, Claude Code 토큰(현재 세션 / 오늘 / 7일) |
 | 알림 허브 | 로컬 HTTP 엔드포인트로 들어오는 모든 알림 + (Linux) 데스크톱 알림 전체 가로채기. 80% / 95% 사용량 경고, 타이머 알림도 여기로 |
 
-## 실행
+## 설치와 실행
 
-```bash
+필요한 것: [Node.js](https://nodejs.org) LTS, [Git](https://git-scm.com/download/win). 모든 명령은 **프로젝트 폴더 안에서** 실행합니다 (홈 폴더에서 실행하면 `package.json` 을 찾을 수 없다는 ENOENT 오류가 납니다).
+
+Windows (cmd 또는 PowerShell):
+
+```bat
+cd %USERPROFILE%
+git clone https://github.com/haansero/floatingbox.git
+cd floatingbox
 npm install
 npm start
 ```
+
+macOS / Linux:
+
+```bash
+git clone https://github.com/haansero/floatingbox.git
+cd floatingbox
+npm install
+npm start
+```
+
+Git 없이 받으려면 GitHub 에서 **Code > Download ZIP** 으로 내려받아 풀고, 그 폴더에서 `npm install` 과 `npm start` 를 실행합니다. 이후 업데이트는 폴더 안에서 `git pull` 후 `npm install`.
 
 창은 프레임 없는 투명 창이며 헤더를 잡고 드래그, 모서리로 크기 조절. `—` 는 트레이로 숨기기, 트레이 아이콘 메뉴에서 투명도 · 새로고침 · 종료.
 설정과 위치는 `userData/config.json` 에 저장됩니다 (macOS `~/Library/Application Support/floatingbox`, Linux `~/.config/floatingbox`, Windows `%APPDATA%\floatingbox`).
@@ -61,10 +79,14 @@ hooks/notify.sh "제목" "본문"
 
 ## Windows 설치 파일 만들기
 
-```powershell
-npm install
-npm run dist:win     # dist/ 에 NSIS 설치 파일과 포터블 exe (x64)
+프로젝트 폴더 안에서:
+
+```bat
+cd %USERPROFILE%\floatingbox
+npm run dist:win
 ```
+
+`dist\` 에 NSIS 설치 파일(`Floating Box Setup 0.1.0.exe`)과 포터블 exe(x64)가 생깁니다. 설치 후에는 Node.js 없이 실행됩니다.
 
 ## 테스트
 
