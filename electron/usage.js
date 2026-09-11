@@ -202,6 +202,7 @@ function dailyBudget(code, fixed, now = Date.now()) {
   const today = localDay(now);
   let max = 0;
   for (const [day, t] of Object.entries(code.byDay || {})) if (day !== today) max = Math.max(max, totalTokens(t));
+  if (code.week) max = Math.max(max, (totalTokens(code.week) / 7) * 2);
   return max || DEFAULT_DAILY_BUDGET;
 }
 

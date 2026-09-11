@@ -138,6 +138,7 @@ function renderUsage(u) {
     if (!budget) {
       const todayKey = localDay(Date.now());
       for (const [day, t] of Object.entries(c.byDay || {})) if (day !== todayKey) budget = Math.max(budget, total(t));
+      budget = Math.max(budget, (week / 7) * 2); // 7일 평균의 2배와 비교해 큰 쪽
       if (!budget) budget = 200e6;
     }
     const remainPct = budget ? Math.max(0, 100 - (today / budget) * 100) : 0;

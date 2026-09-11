@@ -56,14 +56,15 @@ button.step:disabled { opacity: .25; cursor: default; }
 .collapsible { cursor: pointer; }
 #usage-bars { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .gauge { display: flex; align-items: center; gap: 6px; }
-.gauge .k { color: var(--muted); font-size: 10px; width: 30px; text-align: right; }
+.gauge .k { color: var(--muted); font-size: 10px; width: 40px; text-align: right; }
 .gauge .progress { width: 90px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); display: flex; justify-content: center; overflow: hidden; }
 .gauge .bar { height: 100%; border-radius: 4px; background: var(--ok); transition: width .3s; }
 .gauge.warn .bar { background: var(--warn); }
 .gauge.bad .bar { background: var(--bad); }
 .gauge.tokens .bar { background: var(--peach-dim); }
 .gauge.tokens.bad .bar { background: var(--bad); }
-.gauge .v { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--muted); width: 44px; text-align: left; }
+.gauge .v { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--muted); width: 40px; text-align: left; }
+/* 양쪽 글자 칸을 같은 너비로 두어 막대가 박스 중심선 위에 정확히 놓임 */
 .detail { margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--line); font-size: 10px; color: var(--muted); }
 .detail .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
 .detail .row b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }

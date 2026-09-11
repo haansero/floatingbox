@@ -72,7 +72,8 @@ test('collectCodeUsage aggregates today / week / session and dedupes', async () 
   assert.equal(r.byModel['claude-opus-5'].input, 200);
   assert.equal(r.latestSession.sessionId, 's1');
   assert.equal(Object.keys(r.byDay).length, 2);
-  assert.equal(usage.dailyBudget(r, 0, now), 200 + 10 + 5 + 1); // yesterday's record, today excluded
+  // yesterday's record (216) vs twice the 7-day daily average (332*2/7 ≈ 94.9): the larger wins
+  assert.equal(usage.dailyBudget(r, 0, now), 216);
   assert.equal(usage.dailyBudget({ byDay: {} }, 0, now), 200e6);
   assert.equal(usage.dailyBudget(r, 5000), 5000);
   assert.equal(r.latestSession.totals.input, 300);
