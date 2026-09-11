@@ -71,6 +71,10 @@ test('collectCodeUsage aggregates today / week / session and dedupes', async () 
   assert.equal(r.last5h.input, 100);
   assert.equal(r.byModel['claude-opus-5'].input, 200);
   assert.equal(r.latestSession.sessionId, 's1');
+  assert.equal(Object.keys(r.byDay).length, 2);
+  assert.equal(usage.dailyBudget(r, 0, now), 200 + 10 + 5 + 1); // yesterday's record, today excluded
+  assert.equal(usage.dailyBudget({ byDay: {} }, 0, now), 200e6);
+  assert.equal(usage.dailyBudget(r, 5000), 5000);
   assert.equal(r.latestSession.totals.input, 300);
   assert.equal(usage.totalTokens(r.week), 300 + 20 + 10 + 2);
   // "today" depends on local midnight; the 1h-ago record must count when it is after local midnight

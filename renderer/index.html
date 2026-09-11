@@ -10,20 +10,18 @@
   <div id="box">
     <!-- 시계: 드래그 핸들 -->
     <div id="clock" class="drag" title="드래그로 이동 · 우클릭 메뉴">
-      <div class="c-row"><span id="clock-time">--:--</span><span id="clock-sec">--</span></div>
+      <div id="clock-time">--:--</div>
       <div id="clock-date"></div>
     </div>
 
     <!-- 타이머: 클릭 = 시작/중지, 길게 = 리셋 -->
     <div id="timer" title="클릭: 시작/중지 · 길게 누르기: 리셋">
       <div class="progress"><div class="bar" id="timer-bar"></div></div>
-      <div class="t-row">
-        <span id="timer-display">00:00:00</span>
-        <span class="stepper" title="목표 시간 (홑: 10분, 겹: 1시간)">
+      <div id="timer-display">00:00:00</div>
+      <div class="stepper" title="목표 시간 (홑: 10분, 겹: 1시간)">
           <button class="step" data-step="-60">&#9664;&#9664;</button><button class="step" data-step="-10">&#9664;</button>
           <span id="timer-target">00:00</span>
           <button class="step" data-step="10">&#9654;</button><button class="step" data-step="60">&#9654;&#9654;</button>
-        </span>
       </div>
     </div>
 

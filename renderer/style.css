@@ -29,24 +29,21 @@ html, body { margin: 0; background: transparent; overflow: hidden; }
 #box:hover, #box.pinned { opacity: 1; }
 .drag { -webkit-app-region: drag; }
 button, input { -webkit-app-region: no-drag; }
-#box > div { padding: 5px 10px; border-bottom: 1px solid var(--line); }
+#box > div { padding: 5px 10px; border-bottom: 1px solid var(--line); text-align: center; }
 #box > div:last-child { border-bottom: none; }
 
 /* 시계 */
-#clock { padding: 7px 10px 5px; }
-#clock .c-row { display: flex; align-items: baseline; gap: 4px; }
-#clock-time { font-size: 30px; font-weight: 800; letter-spacing: .01em; color: var(--peach); font-variant-numeric: tabular-nums; line-height: 1; }
-#clock-sec { font-size: 13px; font-weight: 700; color: var(--peach-dim); font-variant-numeric: tabular-nums; }
-#clock-date { color: var(--muted); font-size: 10px; margin-top: 2px; }
+#clock { padding: 8px 10px 5px; }
+#clock-time { font-size: 32px; font-weight: 800; letter-spacing: .02em; color: var(--peach); font-variant-numeric: tabular-nums; line-height: 1; }
+#clock-date { color: var(--muted); font-size: 10px; margin-top: 3px; }
 
 /* 타이머 */
 #timer { cursor: pointer; }
 #timer.pressing { background: rgba(255,255,255,.04); }
-#timer .t-row { display: flex; align-items: center; justify-content: space-between; margin-top: 3px; }
-#timer-display { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+#timer-display { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); margin-top: 4px; }
 #timer.running #timer-display { color: var(--ok); }
 #timer.over #timer-display { color: var(--warn); }
-#timer .stepper { display: flex; align-items: center; gap: 1px; color: var(--muted); }
+#timer .stepper { display: flex; align-items: center; justify-content: center; gap: 1px; color: var(--muted); margin-top: 1px; }
 #timer-target { font-size: 11px; font-variant-numeric: tabular-nums; min-width: 34px; text-align: center; color: var(--fg); }
 #timer.has-target #timer-target { color: var(--accent); }
 button.step { background: none; border: none; color: var(--muted); font-size: 8px; padding: 2px 3px; cursor: pointer; line-height: 1; letter-spacing: -2px; }
@@ -57,22 +54,23 @@ button.step:disabled { opacity: .25; cursor: default; }
 
 /* 사용량: 짧고 굵은 게이지를 한 줄에 */
 .collapsible { cursor: pointer; }
-#usage-bars { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.gauge { display: flex; align-items: center; gap: 5px; }
-.gauge .k { color: var(--muted); font-size: 10px; white-space: nowrap; }
-.gauge .progress { width: 56px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); position: relative; overflow: hidden; }
-.gauge .bar { height: 100%; border-radius: 4px; background: var(--ok); }
-.gauge .bar.sub { position: absolute; left: 0; top: 0; background: var(--peach); }
+#usage-bars { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.gauge { display: flex; align-items: center; gap: 6px; }
+.gauge .k { color: var(--muted); font-size: 10px; width: 30px; text-align: right; }
+.gauge .progress { width: 90px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.08); display: flex; justify-content: center; overflow: hidden; }
+.gauge .bar { height: 100%; border-radius: 4px; background: var(--ok); transition: width .3s; }
 .gauge.warn .bar { background: var(--warn); }
 .gauge.bad .bar { background: var(--bad); }
 .gauge.tokens .bar { background: var(--peach-dim); }
-.gauge .v { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--muted); min-width: 26px; }
+.gauge.tokens.bad .bar { background: var(--bad); }
+.gauge .v { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--muted); width: 44px; text-align: left; }
 .detail { margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--line); font-size: 10px; color: var(--muted); }
 .detail .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
 .detail .row b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
 .error { color: var(--bad); font-size: 10px; }
 
 /* 알림 */
+#box > #notifs { text-align: left; }
 #notif-line { display: flex; align-items: center; gap: 6px; }
 .badge { min-width: 15px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #1a1512; font-size: 9px; font-weight: 700; text-align: center; line-height: 14px; }
 .badge.zero { background: var(--card); color: var(--muted); }

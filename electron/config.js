@@ -16,6 +16,8 @@ const DEFAULTS = {
   timer: { elapsedMs: 0, running: false, startedAt: null },
   // Keep full opacity even when the mouse is away (default: fade to ~78%)
   alwaysSharp: false,
+  // Claude Code daily token budget for the "remaining" gauge. 0 = auto (busiest day of the last 7 days)
+  codeDailyTokenBudget: 0,
   layout: 3,
 };
 

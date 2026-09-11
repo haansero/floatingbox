@@ -16,8 +16,7 @@ ro.observe($('box'));
 function tickClock() {
   const d = new Date();
   $('clock-time').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  $('clock-sec').textContent = pad(d.getSeconds());
-  $('clock-date').textContent = `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}`;
+  $('clock-date').textContent = `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} (${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]})`;
 }
 
 // ---------- 타이머 ----------
@@ -106,10 +105,12 @@ function keepOpen(sectionId, detailId) {
 
 // ---------- 사용량 ----------
 let usageData = null;
-function bar(cls, label, pct, value, sub) {
-  const subHtml = sub !== undefined ? `<div class="bar sub" style="width:${Math.min(100, sub)}%"></div>` : '';
+let tokenBudgetCfg = 0;
+const localDay = (ts) => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+/** 가운데에서 양쪽으로 자라는 게이지 */
+function bar(cls, label, pct, value) {
   return `<div class="gauge ${cls}" title="${esc(label)} ${esc(value)}"><span class="k">${esc(label)}</span>
-    <div class="progress"><div class="bar" style="width:${Math.min(100, pct)}%"></div>${subHtml}</div>
+    <div class="progress"><div class="bar" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
     <span class="v">${esc(value)}</span></div>`;
 }
 function renderUsage(u) {
@@ -131,8 +132,17 @@ function renderUsage(u) {
     const total = (t) => t.input + t.output + t.cacheRead + t.cacheWrite;
     const week = total(c.week), today = total(c.today);
     const sess = c.latestSession ? total(c.latestSession.totals) : 0;
-    // 막대: 7일 총량을 100 으로 두고 오늘(밝은 색)을 겹쳐 표시
-    html += bar('tokens', '토큰', week ? 100 : 0, fmtTokens(today), week ? (today / week) * 100 : 0);
+    // 토큰 잔여량: 하루 예산(고정값 또는 7일 중 최대치) 대비 남은 비율. 100% 에서 줄어들고 10% 이하면 빨강
+    // 자동 예산: 오늘을 제외한 최근 6일 중 최대치. 기록이 없으면 200M
+    let budget = tokenBudgetCfg;
+    if (!budget) {
+      const todayKey = localDay(Date.now());
+      for (const [day, t] of Object.entries(c.byDay || {})) if (day !== todayKey) budget = Math.max(budget, total(t));
+      if (!budget) budget = 200e6;
+    }
+    const remainPct = budget ? Math.max(0, 100 - (today / budget) * 100) : 0;
+    html += bar('tokens' + (remainPct <= 10 ? ' bad' : remainPct <= 25 ? ' warn' : ''), '토큰', remainPct, `${Math.round(remainPct)}%`);
+    rows.push(`<div class="row"><span>토큰 잔여 (예산 ${fmtTokens(budget)}${tokenBudgetCfg ? '' : ' · 최근 최대'})</span><b>${fmtTokens(Math.max(0, budget - today))}</b></div>`);
     rows.push(`<div class="row"><span>Claude Code 오늘</span><b>${fmtInt(today)}</b></div>`);
     rows.push(`<div class="row"><span>7일</span><b>${fmtInt(week)}</b></div>`);
     rows.push(`<div class="row"><span>현재 세션</span><b>${fmtInt(sess)}</b></div>`);
@@ -193,6 +203,7 @@ $('notif-clear').addEventListener('click', (e) => { e.stopPropagation(); box.cle
 window.addEventListener('contextmenu', (e) => { e.preventDefault(); box.contextMenu(); });
 
 box.onState((s) => {
+  tokenBudgetCfg = s.codeDailyTokenBudget || 0;
   notifications = s.notifications || [];
   renderNotifs();
   renderUsage(s.usage);

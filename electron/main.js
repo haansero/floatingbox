@@ -77,6 +77,7 @@ function sendState() {
     desktopCaptureReason: capture ? capture.reason : 'disabled',
     platform: process.platform,
     alwaysSharp: !!cfg.alwaysSharp,
+    codeDailyTokenBudget: cfg.codeDailyTokenBudget || 0,
   });
   if (tray) tray.setToolTip(`Floating Box — 알림 ${hub.unreadCount()}개`);
 }
