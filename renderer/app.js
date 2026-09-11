@@ -160,7 +160,9 @@ box.onState((s) => {
   }
   const hint = [];
   hint.push(`POST http://127.0.0.1:${s.hubPort}/notify`);
-  if (s.platform === 'linux') hint.push(s.desktopCapture ? '데스크톱 알림 가로채기 ON' : `데스크톱 가로채기 OFF (${s.desktopCaptureReason})`);
+  if (s.platform === 'linux' || s.platform === 'win32') {
+    hint.push(s.desktopCapture ? `시스템 알림 수집 ON (${s.desktopCaptureReason})` : `시스템 알림 수집 OFF (${s.desktopCaptureReason})`);
+  }
   $('notif-hint').textContent = hint.join(' · ');
 });
 box.onUsage(renderUsage);

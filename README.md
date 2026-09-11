@@ -50,7 +50,21 @@ hooks/notify.sh "제목" "본문"
 | --- | --- | --- |
 | **Linux** | **모든 데스크톱 알림을 완전히 가로채기** (팝업이 뜨지 않고 박스에만 표시) | 이 앱이 D-Bus `org.freedesktop.Notifications` 서비스를 차지해 알림 데몬(dunst, gnome-shell 등)을 대체합니다. 기본 켜짐, `captureDesktopNotifications: false` 로 끄기. GNOME 처럼 셸이 이름을 다시 가져가는 환경에서는 셸 알림 서버를 비활성화해야 합니다. |
 | **macOS** | 가로채기 **불가** (읽기만 제한적으로 가능) | 서드파티 앱이 다른 앱의 알림을 받거나 억제하는 공개 API 가 없습니다. Full Disk Access 를 주면 Notification Center DB (`~/Library/Group Containers/group.com.apple.usernoted/db2/db`) 를 읽어 *표시된 후* 목록만 미러링할 수 있습니다 (미구현, 방향만 열어 둠). 현실적인 방법은 알림을 만드는 쪽(Claude Code 훅, 스크립트, Shortcuts, 웹훅)을 박스의 HTTP 엔드포인트로 돌리는 것입니다. |
-| **Windows** | 읽기 가능, 표시 억제 불가 | WinRT `UserNotificationListener` 로 알림 센터 내용을 읽고 지울 수 있지만 토스트가 뜨는 것은 막지 못합니다. 네이티브 모듈이 필요해 이 저장소에는 아직 없습니다. |
+| **Windows 10/11** | **알림 센터 전체를 박스로 미러링**, 박스에서 지우면 알림 센터에서도 삭제. 토스트 배너 자체는 Windows 설정으로 끔 | 내장 Windows PowerShell 5.1 에서 WinRT `UserNotificationListener` 를 돌려(`electron/win/listener.ps1`) 2초마다 새 알림을 가져옵니다. 네이티브 모듈 없음. 아래 "Windows 설정" 참고. |
+
+### Windows 설정 (모든 알림을 박스에서만 보기)
+
+1. 처음 실행하면 Windows 가 알림 액세스 권한을 묻습니다. 거부했다면 **설정 > 개인 정보 및 보안 > 알림** 에서 허용하세요. 박스 하단에 `시스템 알림 수집 ON (listening)` 이 보이면 정상입니다.
+2. 토스트 팝업을 없애려면 **설정 > 시스템 > 알림** 에서 앱별로 "알림 배너 표시" 를 끄고 "알림 센터에 알림 표시" 만 남깁니다. 그러면 알림이 화면에 뜨지 않고 알림 센터로 바로 가며, 박스가 2초 안에 가져옵니다. (Windows 는 서드파티 앱이 다른 앱의 토스트를 직접 차단하는 것을 허용하지 않습니다.)
+3. 트레이 메뉴 **로그인 시 자동 실행** 을 켜두면 부팅 후 바로 떠 있습니다. 앱은 단일 인스턴스로 동작합니다.
+4. 이미 알림 센터에 있던 항목은 시작 시 읽음 상태로 들어옵니다. 박스의 × 는 알림 센터에서도 지웁니다.
+
+## Windows 설치 파일 만들기
+
+```powershell
+npm install
+npm run dist:win     # dist/ 에 NSIS 설치 파일과 포터블 exe (x64)
+```
 
 ## 테스트
 

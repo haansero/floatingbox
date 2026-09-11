@@ -4,6 +4,7 @@ const path = require('node:path');
 const config = require('./config');
 const { NotifyHub } = require('./notifyHub');
 const { startDesktopNotificationServer } = require('./dbusNotifications');
+const { startWindowsNotificationListener } = require('./windowsNotifications');
 const { readClaudeCredentials } = require('./credentials');
 const usage = require('./usage');
 
@@ -11,7 +12,7 @@ let win = null;
 let tray = null;
 let cfg = null;
 let hub = null;
-let dbusServer = null;
+let capture = null; // desktop notification capture (Linux D-Bus server / Windows listener)
 let usageTimer = null;
 const usageState = { plan: [], planError: null, code: null, codeError: null, updatedAt: null, source: null };
 
@@ -69,8 +70,8 @@ function sendState() {
     usage: usageState,
     timer: cfg.timer,
     hubPort: hub.port,
-    desktopCapture: dbusServer ? dbusServer.ok : false,
-    desktopCaptureReason: dbusServer ? dbusServer.reason : 'disabled',
+    desktopCapture: capture ? capture.ok : false,
+    desktopCaptureReason: capture ? capture.reason : 'disabled',
     platform: process.platform,
   });
   if (tray) tray.setToolTip(`Floating Box — 알림 ${hub.unreadCount()}개`);
@@ -130,6 +131,10 @@ function buildTray() {
       })),
     },
     { label: '사용량 새로고침', click: () => refreshUsage() },
+    {
+      label: '로그인 시 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin,
+      click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked, args: ['--hidden'] }),
+    },
     { type: 'separator' },
     { label: '종료', click: () => app.quit() },
   ]);
@@ -154,10 +159,13 @@ function wireIpc() {
   ipcMain.handle('state:get', () => ({ notifications: hub.items, usage: usageState, timer: cfg.timer, hubPort: hub.port }));
 }
 
+if (!app.requestSingleInstanceLock()) app.quit();
+app.on('second-instance', () => { if (win) win.show(); });
+
 app.whenReady().then(async () => {
   cfg = config.load(userData());
   hub = new NotifyHub({ port: cfg.hubPort });
-  hub.on('notification', (n) => { send('notification', n); sendState(); if (win && !win.isVisible()) win.show(); });
+  hub.on('notification', (n) => { send('notification', n); sendState(); if (win && !win.isVisible()) win.showInactive(); });
   hub.on('change', () => sendState());
 
   try {
@@ -167,8 +175,11 @@ app.whenReady().then(async () => {
   }
 
   if (cfg.captureDesktopNotifications) {
-    dbusServer = await startDesktopNotificationServer(hub, { log: (m) => console.log(m) });
-    if (!dbusServer.ok) console.log('desktop notification capture off:', dbusServer.reason);
+    const log = (m) => console.log(m);
+    if (process.platform === 'linux') capture = await startDesktopNotificationServer(hub, { log });
+    else if (process.platform === 'win32') capture = startWindowsNotificationListener(hub, { log });
+    else capture = { ok: false, reason: 'unsupported on ' + process.platform };
+    if (!capture.ok) console.log('desktop notification capture off:', capture.reason);
   }
 
   wireIpc();
@@ -184,6 +195,6 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => { /* keep tray alive */ });
 app.on('before-quit', async () => {
   clearInterval(usageTimer);
-  if (dbusServer && dbusServer.stop) dbusServer.stop();
+  if (capture && capture.stop) capture.stop();
   if (hub) await hub.close();
 });
