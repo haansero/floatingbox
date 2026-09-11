@@ -98,6 +98,8 @@ npm run dist:win
 
 `dist\` 에 NSIS 설치 파일(`Floating Box Setup 0.1.0.exe`)과 포터블 exe(x64)가 생깁니다. 설치 후에는 Node.js 없이 실행됩니다.
 
+코드 서명은 하지 않으므로(`signAndEditExecutable: false`) 관리자 권한이나 개발자 모드 없이 빌드됩니다. 처음 실행할 때 Windows SmartScreen 경고가 뜨면 "추가 정보 > 실행" 을 누르세요.
+
 ## 테스트
 
 ```bash
