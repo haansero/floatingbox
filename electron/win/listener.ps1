@@ -5,6 +5,9 @@
 param([int]$PollSeconds = 2)
 
 $ErrorActionPreference = 'Stop'
+# Node reads stdout as UTF-8; Windows PowerShell defaults to the OEM code page (CP949 on Korean systems).
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 function Emit($obj) { Write-Output (ConvertTo-Json -Compress -Depth 4 $obj); [Console]::Out.Flush() }
 
 try {

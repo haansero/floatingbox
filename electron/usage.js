@@ -45,8 +45,10 @@ function parsePlanUsage(json) {
       resetsAt: val.resets_at || val.resetsAt || null,
     });
   }
-  out.sort((a, b) => orderOf(a.key) - orderOf(b.key));
-  return out;
+  // Unknown buckets (feature-specific pools) only matter once they are used.
+  const filtered = out.filter((b) => BUCKET_LABELS[b.key] || b.percent > 0);
+  filtered.sort((a, b) => orderOf(a.key) - orderOf(b.key));
+  return filtered;
 }
 
 function orderOf(key) {

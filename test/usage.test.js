@@ -11,6 +11,7 @@ test('parsePlanUsage maps known buckets, orders them, tolerates junk', () => {
     seven_day: { utilization: 42.5, resets_at: '2026-09-15T00:00:00Z' },
     five_hour: { utilization: 12, resets_at: '2026-09-11T12:00:00Z' },
     something_new: { utilization: 3 },
+    idle_pool: { utilization: 0 },
     extra_usage: { is_enabled: false },
     seven_day_opus: { utilization: 150 },
     nope: 'string',
